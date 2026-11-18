@@ -1,0 +1,347 @@
+
+<ion-app>
+  <ion-header class="ion-no-border">
+    <ion-toolbar>
+      <div class="topbar">
+        <div class="brand-mark">
+          <ion-icon name="navigate-outline"></ion-icon>
+        </div>
+
+        <div>
+          <div class="brand-name">LocaTrack</div>
+          <div class="brand-subtitle">Your location, simply measured</div>
+        </div>
+
+        <div class="privacy-pill">
+          <ion-icon name="shield-checkmark-outline"></ion-icon>
+          Private
+        </div>
+      </div>
+    </ion-toolbar>
+  </ion-header>
+
+  <ion-content [fullscreen]="true">
+    <main class="page-shell">
+
+      <section class="intro">
+        <div class="eyebrow">PERSONAL LOCATION TRACKER</div>
+        <h1>Know how far<br><span>you've moved.</span></h1>
+        <p>Save your current GPS position and compare it with your last saved location.</p>
+      </section>
+
+      <ion-card class="distance-card" mode="ios">
+        <ion-card-content>
+          <div class="card-topline">
+            <span class="metric-label">DISTANCE FROM PREVIOUS</span>
+            <span class="live-dot"></span>
+          </div>
+
+          <div class="distance-value">
+            {{
+              !latest || latest.distanceFromPrevious === null
+                ? '—'
+                : formatDistance(latest.distanceFromPrevious)
+            }}
+          </div>
+
+          <div class="distance-note">
+            {{
+              latest?.distanceFromPrevious === null || !latest
+                ? 'Save your first location to begin'
+                : 'Straight-line distance between saved points'
+            }}
+          </div>
+
+          <div class="distance-decoration">
+            <ion-icon name="navigate-outline"></ion-icon>
+          </div>
+        </ion-card-content>
+      </ion-card>
+
+      <ion-button
+        expand="block"
+        class="location-button"
+        (click)="getLocation()"
+        [disabled]="loading">
+
+        @if (loading) {
+          <ion-spinner name="crescent"></ion-spinner>
+          <span>Getting your location...</span>
+        } @else {
+          <ion-icon slot="start" name="locate-outline"></ion-icon>
+          <span>Get My Location</span>
+        }
+      </ion-button>
+
+      @if (errorMessage) {
+        <div class="message error">
+          <ion-icon name="alert-circle-outline"></ion-icon>
+          <span>{{ errorMessage }}</span>
+        </div>
+      } @else {
+        <div class="message">
+          <ion-icon name="checkmark-circle-outline"></ion-icon>
+          <span>{{ permissionMessage }}</span>
+        </div>
+      }
+
+      <section class="map-section">
+        <div class="map-heading">
+          <div>
+            <h2>Location map</h2>
+            <p>View your saved GPS positions on a real map</p>
+          </div>
+
+          <ion-button
+            fill="outline"
+            size="small"
+            class="map-toggle"
+            (click)="openMap()">
+
+            <ion-icon
+              slot="start"
+              [name]="mapVisible ? 'close-outline' : 'map-outline'">
+            </ion-icon>
+
+            {{ mapVisible ? 'Hide map' : 'Show map' }}
+          </ion-button>
+        </div>
+
+        @if (mapVisible) {
+          <div class="map-card">
+            <div #mapElement class="location-map"></div>
+
+            @if (mapMessage) {
+              <div class="map-message">
+                <ion-icon name="alert-circle-outline"></ion-icon>
+                {{ mapMessage }}
+              </div>
+            }
+
+            <div class="map-actions">
+              <span>{{ history.length }} saved location(s)</span>
+
+              <ion-button
+                fill="clear"
+                size="small"
+                [disabled]="!latest"
+                (click)="centerOnLatest()">
+
+                <ion-icon slot="start" name="locate-outline"></ion-icon>
+                Locate me
+              </ion-button>
+            </div>
+          </div>
+        }
+      </section>
+
+      <section class="section-heading">
+        <div>
+          <h2>Current position</h2>
+          <p>Your latest successful GPS reading</p>
+        </div>
+
+        @if (latest) {
+          <ion-badge color="success">Saved</ion-badge>
+        }
+      </section>
+
+      <ion-card class="info-card" mode="ios">
+        <ion-card-content>
+          @if (latest) {
+
+            <div class="address-heading">
+              <ion-icon name="location-outline"></ion-icon>
+              <strong>Detected address</strong>
+            </div>
+
+            @if (addressLoading) {
+              <div class="address-loading">
+                <ion-spinner name="crescent"></ion-spinner>
+                <span>Looking up your address...</span>
+              </div>
+            } @else if (latest.address) {
+              <div class="address-details">
+                <div class="address-row">
+                  <span>Street</span>
+                  <strong>{{ latest.address.street }}</strong>
+                </div>
+
+                <div class="address-row">
+                  <span>Barangay</span>
+                  <strong>{{ latest.address.barangay }}</strong>
+                </div>
+
+                <div class="address-row">
+                  <span>Municipality / City</span>
+                  <strong>{{ latest.address.municipality }}</strong>
+                </div>
+
+                <div class="address-row">
+                  <span>Province</span>
+                  <strong>{{ latest.address.province }}</strong>
+                </div>
+
+                <div class="address-row">
+                  <span>Country</span>
+                  <strong>{{ latest.address.country }}</strong>
+                </div>
+              </div>
+            } @else {
+              <div class="address-unavailable">
+                <ion-icon name="alert-circle-outline"></ion-icon>
+                <span>
+                  {{
+                    addressLookupMessage ||
+                    'Address not available. Tap Get My Location to look it up.'
+                  }}
+                </span>
+              </div>
+            }
+
+            @if (addressLookupMessage && latest.address) {
+              <div class="address-success">
+                {{ addressLookupMessage }}
+              </div>
+            }
+
+            <div class="thin-divider"></div>
+
+            <div class="coordinate-row">
+              <div class="coordinate-icon">
+                <ion-icon name="location-outline"></ion-icon>
+              </div>
+
+              <div class="coordinate-copy">
+                <span>Latitude</span>
+                <strong>{{ formatCoordinate(latest.latitude) }}</strong>
+              </div>
+
+              <div class="coordinate-copy right">
+                <span>Longitude</span>
+                <strong>{{ formatCoordinate(latest.longitude) }}</strong>
+              </div>
+            </div>
+
+            <div class="thin-divider"></div>
+
+            <div class="detail-row">
+              <span>GPS accuracy</span>
+              <strong>{{ formatAccuracy(latest.accuracy) }}</strong>
+            </div>
+
+            <div class="detail-row">
+              <span>Last updated</span>
+              <strong>{{ formatTime(latest.timestamp) }}</strong>
+            </div>
+
+            <ion-button
+              fill="clear"
+              size="small"
+              class="copy-button"
+              (click)="copyCoordinates()">
+              Copy coordinates
+            </ion-button>
+
+          } @else {
+            <div class="empty-state">
+              <div class="empty-icon">
+                <ion-icon name="compass-outline"></ion-icon>
+              </div>
+
+              <strong>No location saved yet</strong>
+              <span>Tap “Get My Location” to capture your first position.</span>
+            </div>
+          }
+        </ion-card-content>
+      </ion-card>
+
+      <section class="section-heading history-heading">
+        <div>
+          <h2>Location history</h2>
+          <p>Up to 50 recent saved locations</p>
+        </div>
+
+        @if (history.length) {
+          <ion-button
+            fill="clear"
+            size="small"
+            color="medium"
+            (click)="openClearAlert()">
+            <ion-icon slot="start" name="trash-outline"></ion-icon>
+            Clear
+          </ion-button>
+        }
+      </section>
+
+      @if (history.length) {
+        <ion-list class="history-list" lines="none">
+          @for (item of history; track item.timestamp; let i = $index) {
+            <ion-item>
+              <div class="history-marker" slot="start">
+                {{ history.length - i }}
+              </div>
+
+              <ion-label>
+                <h3>{{ i === 0 ? 'Latest location' : 'Saved location' }}</h3>
+                <p>{{ formatTime(item.timestamp) }}</p>
+
+                @if (item.address) {
+                  <p class="history-coords">
+                    {{ item.address.barangay }},
+                    {{ item.address.municipality }}
+                  </p>
+                  <p class="history-coords">
+                    {{ item.address.province }},
+                    {{ item.address.country }}
+                  </p>
+                }
+
+                <p class="history-coords">
+                  {{ formatCoordinate(item.latitude) }},
+                  {{ formatCoordinate(item.longitude) }}
+                </p>
+              </ion-label>
+
+              <div class="history-distance" slot="end">
+                <strong>
+                  {{
+                    item.distanceFromPrevious === null
+                      ? 'Start'
+                      : formatDistance(item.distanceFromPrevious)
+                  }}
+                </strong>
+                <span>
+                  {{
+                    item.distanceFromPrevious === null
+                      ? 'First point'
+                      : 'From previous'
+                  }}
+                </span>
+              </div>
+            </ion-item>
+          }
+        </ion-list>
+      } @else {
+        <div class="history-empty">
+          Your saved locations will appear here.
+        </div>
+      }
+
+      <footer>
+        <ion-icon name="shield-checkmark-outline"></ion-icon>
+        Your location history stays on this phone. LocaTrack does not track you in the background.
+        Address lookup uses OpenStreetMap data.
+      </footer>
+
+    </main>
+
+    <ion-alert
+      [isOpen]="showClearAlert"
+      header="Clear location history?"
+      message="This permanently removes all saved locations from this device."
+      [buttons]="clearAlertButtons"
+      (didDismiss)="showClearAlert = false">
+    </ion-alert>
+  </ion-content>
+</ion-app>
