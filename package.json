@@ -1,0 +1,41 @@
+{
+  "name": "locatrack",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "ng serve --host 0.0.0.0",
+    "build": "ng build",
+    "android:add": "cap add android",
+    "android:sync": "npm run build && cap sync android",
+    "android:open": "cap open android"
+  },
+  "dependencies": {
+    "@angular/animations": "19.2.25",
+    "@angular/common": "19.2.25",
+    "@angular/compiler": "19.2.25",
+    "@angular/core": "19.2.25",
+    "@angular/forms": "19.2.25",
+    "@angular/platform-browser": "19.2.25",
+    "@angular/router": "19.2.25",
+    "@capacitor/android": "^7.0.0",
+    "@capacitor/core": "^7.0.0",
+    "@capacitor/geolocation": "^7.0.0",
+    "@ionic/angular": "^8.0.0",
+    "ionicons": "^7.4.0",
+    "leaflet": "^1.9.4",
+    "rxjs": "~7.8.1",
+    "tslib": "^2.8.0",
+    "zone.js": "~0.15.0"
+  },
+  "devDependencies": {
+    "@angular-devkit/build-angular": "19.2.25",
+    "@angular/cli": "19.2.25",
+    "@angular/compiler-cli": "19.2.25",
+    "@capacitor/cli": "^7.0.0",
+    "@types/leaflet": "^1.9.22",
+    "typescript": "~5.7.2"
+  },
+  "allowScripts": {
+    "esbuild@0.25.12": true
+  }
+}
